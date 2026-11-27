@@ -337,6 +337,7 @@ class CapsuleController(
                     CapsuleRun(
                         r.key, r.conversationId, s, st, r.goal, exchange(r, s, acts),
                         runId = r.runId.value, onScreen = display >= 0 || web,
+                        bridge = com.wangzan101.mika.bridge.BridgeSessions.isBridge(r.mcpExternalId),
                     )
                 }.combine(r.steers) { c, steers -> c.copy(steers = steers) }
             }) { it.toList() }.combine(takeoverQueue.changes) { list, _ ->

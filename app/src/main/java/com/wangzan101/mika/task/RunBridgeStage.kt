@@ -53,7 +53,15 @@ internal fun bridgeAllow(all: List<String>): Set<String> = all
  */
 internal suspend fun TaskRun.runBridgeSession(t: RunTools): TaskState {
     val allow = bridgeAllow(t.tools.definitions().map { it.name })
-    val set = BridgeToolSet(t.tools, allow)
+    val set = BridgeToolSet(
+        t.tools, allow,
+        // 壳模式不跑模型,没有模型写的 narration —— 胶囊只能回退成「正在准备」。
+        // 这里把电脑的每次调用翻成一句人话写进状态,步骤流才看得到电脑在点哪。
+        onStep = { step, name, args ->
+            val said = com.wangzan101.mika.bridge.bridgeStepText(name, args)
+            runState.setState(TaskState.Running(step, said, narration = said))
+        },
+    )
     val closed = CompletableDeferred<Unit>()
     BridgeSessions.install(set, closed)
     return try {

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 壳模式步骤流:把电脑的每次工具调用说成一句人话(见 bridge/BridgeStepText.kt)。 -->
+<resources>
+    <string name="bridge_step_tap">点击「%1$s」</string>
+    <string name="bridge_step_tap_blank">点击屏幕</string>
+    <string name="bridge_step_type">输入「%1$s」</string>
+    <string name="bridge_step_type_blank">输入文字</string>
+    <string name="bridge_step_clear">清空输入框</string>
+    <string name="bridge_step_launch">打开 %1$s</string>
+    <string name="bridge_step_launch_blank">打开应用</string>
+    <string name="bridge_step_back">返回上一层</string>
+    <string name="bridge_step_key">按键 %1$s</string>
+    <string name="bridge_step_key_blank">按了一个键</string>
+    <string name="bridge_step_swipe">滑动屏幕</string>
+    <string name="bridge_step_scroll">滚动页面</string>
+    <string name="bridge_step_find">查找「%1$s」</string>
+    <string name="bridge_step_find_blank">在屏幕上查找</string>
+    <string name="bridge_step_wait">等待「%1$s」出现</string>
+    <string name="bridge_step_wait_blank">等待界面变化</string>
+    <string name="bridge_step_read">读取当前界面</string>
+    <string name="bridge_step_screenshot">截屏</string>
+    <string name="bridge_step_diagnose">检查手机状态</string>
+    <string name="bridge_step_dialog">查看弹窗</string>
+    <string name="bridge_step_list_apps">列出已装应用</string>
+    <string name="bridge_step_run">执行一批操作</string>
+    <string name="bridge_step_shell">执行命令:%1$s</string>
+    <string name="bridge_step_shell_blank">执行设备命令</string>
+    <string name="bridge_step_share">从手机分享内容</string>
+    <string name="bridge_step_after_task">执行收尾动作</string>
+    <string name="bridge_step_review">回看之前的屏幕</string>
+    <string name="bridge_step_read_file">读取文件 %1$s</string>
+    <string name="bridge_step_read_file_blank">读取文件</string>
+    <string name="bridge_step_write_file">写入文件 %1$s</string>
+    <string name="bridge_step_write_file_blank">写入文件</string>
+    <string name="bridge_step_share_file">导出文件 %1$s</string>
+    <string name="bridge_step_share_file_blank">导出文件</string>
+    <string name="bridge_step_other">执行 %1$s</string>
+</resources>

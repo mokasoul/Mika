@@ -33,6 +33,13 @@ class BridgeToolSet(
     allow: Set<String>,
     private val approvals: ApprovalSettings = ApprovalSettings.ASK,
     private val clock: () -> Long = System::currentTimeMillis,
+    /**
+     * 每次电脑调用前回调一次(步号、工具名、参数),给宿主把「电脑在做什么」写到任务状态上。
+     *
+     * 壳模式不跑模型,[TaskState.Running] 里没有 narration/reason,胶囊只能回退成「正在准备」——
+     * 用户看不到电脑到底在点哪。宿主在这里把人话写进 [_state],胶囊的步骤流才有内容。
+     */
+    private val onStep: (step: Int, name: String, args: JsonObject) -> Unit = { _, _, _ -> },
 ) : McpToolSet {
     val events = RunEventBus()
     private var step = 0
@@ -71,6 +78,7 @@ class BridgeToolSet(
     override suspend fun call(name: String, args: JsonObject): JsonObject {
         if (name !in names) return fail("unknown_tool")
         step++
+        onStep(step, name, args)
         val callId = "bridge_$step"
         events.event(RunEvent.State(clock(), "bridge_tool_call", "$callId $name"))
         val outcome = try {

@@ -129,7 +129,8 @@ object CapsuleCards {
     /** 卡片底部有没有输入框、交给谁:要你接管、要你同意时没有(先处理那件事);空闲卡片是开始说。 */
     fun input(card: CardView): CardInput? = when (card) {
         is CardView.Chat -> card.content?.let(::inputFor) ?: CardInput(HINT_START, CardInputKind.Start).takeIf { card.run == null }
-        is CardView.Detail -> inputFor(card.content)
+        // 电脑在调工具时(mcpExternalId 是 bridge:)不跑手机模型,提上去的话没人处理,不给输入框
+        is CardView.Detail -> if (card.run.run.bridge) null else inputFor(card.content)
         is CardView.Kept -> null
     }
 

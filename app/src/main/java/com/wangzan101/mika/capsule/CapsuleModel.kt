@@ -80,6 +80,14 @@ data class CapsuleRun(
     val runId: String? = null,
     val onScreen: Boolean = false,
     val steers: List<SteerNote> = emptyList(),
+    /**
+     * 这件活儿是「电脑直接调工具」([com.wangzan101.mika.bridge.BridgeSessions])开起来的。
+     *
+     * 壳模式不跑手机模型:电脑在调工具的时候,卡片底部那个输入框提上来的话没人处理,
+     * 提了也是白提 —— 所以这种卡片不显示输入框(见 [CapsuleCards.input])。
+     * 任务结束、回到空闲卡片后输入框照常回来。
+     */
+    val bridge: Boolean = false,
 )
 
 /**

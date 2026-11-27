@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 壳模式步骤流:把电脑的每次工具调用说成一句人话(见 bridge/BridgeStepText.kt)。 -->
+<resources>
+    <string name="bridge_step_tap">Tapped \"%1$s\"</string>
+    <string name="bridge_step_tap_blank">Tapped the screen</string>
+    <string name="bridge_step_type">Typed \"%1$s\"</string>
+    <string name="bridge_step_type_blank">Typed some text</string>
+    <string name="bridge_step_clear">Cleared the text field</string>
+    <string name="bridge_step_launch">Opened %1$s</string>
+    <string name="bridge_step_launch_blank">Opened an app</string>
+    <string name="bridge_step_back">Went back</string>
+    <string name="bridge_step_key">Pressed %1$s</string>
+    <string name="bridge_step_key_blank">Pressed a key</string>
+    <string name="bridge_step_swipe">Swiped the screen</string>
+    <string name="bridge_step_scroll">Scrolled the screen</string>
+    <string name="bridge_step_find">Looked for \"%1$s\"</string>
+    <string name="bridge_step_find_blank">Looked for something on screen</string>
+    <string name="bridge_step_wait">Waited for \"%1$s\"</string>
+    <string name="bridge_step_wait_blank">Waited for the screen to change</string>
+    <string name="bridge_step_read">Read the current screen</string>
+    <string name="bridge_step_screenshot">Took a screenshot</string>
+    <string name="bridge_step_diagnose">Checked the phone state</string>
+    <string name="bridge_step_dialog">Read the dialog</string>
+    <string name="bridge_step_list_apps">Listed installed apps</string>
+    <string name="bridge_step_run">Ran a batch of steps</string>
+    <string name="bridge_step_shell">Ran a shell command: %1$s</string>
+    <string name="bridge_step_shell_blank">Ran a shell command</string>
+    <string name="bridge_step_share">Shared content from the phone</string>
+    <string name="bridge_step_after_task">Ran the post-task step</string>
+    <string name="bridge_step_review">Reviewed earlier screens</string>
+    <string name="bridge_step_read_file">Read file %1$s</string>
+    <string name="bridge_step_read_file_blank">Read a file</string>
+    <string name="bridge_step_write_file">Wrote file %1$s</string>
+    <string name="bridge_step_write_file_blank">Wrote a file</string>
+    <string name="bridge_step_share_file">Exported %1$s</string>
+    <string name="bridge_step_share_file_blank">Exported a file</string>
+    <string name="bridge_step_other">Ran %1$s</string>
+</resources>
