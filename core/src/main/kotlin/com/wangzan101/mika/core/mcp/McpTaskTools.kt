@@ -25,7 +25,7 @@ class McpTaskTools(
     private val service: RemoteTaskService,
     device: DeviceAccess? = null,
     calls: com.wangzan101.mika.core.calls.PhoneCallPort? = null,
-) {
+) : McpToolSet {
     constructor(tasks: RemoteTasks, pollMs: Long = 250, device: DeviceAccess? = null) :
         this(RemoteTaskService(tasks, pollMs), device)
 
@@ -83,7 +83,7 @@ class McpTaskTools(
     ) + deviceTools?.tools.orEmpty() + callTools?.tools.orEmpty()
 
     /** MCP 的工具定义(tools/list 的一项)。 */
-    fun definitions(): JsonArray = buildJsonArray {
+    override fun definitions(): JsonArray = buildJsonArray {
         tools.forEach { t ->
             add(buildJsonObject {
                 put("name", t.name)
@@ -98,10 +98,10 @@ class McpTaskTools(
         }
     }
 
-    fun has(name: String) = tools.any { it.name == name }
+    override fun has(name: String) = tools.any { it.name == name }
 
     /** 只做协议参数转换和 MCP 展示;业务规则由两个入口共用的 service 执行。 */
-    suspend fun call(name: String, args: JsonObject): JsonObject = try {
+    override suspend fun call(name: String, args: JsonObject): JsonObject = try {
         when (name) {
             RUN -> {
                 val requestId = if ("request_id" in args) string(args, "request_id").orEmpty() else null

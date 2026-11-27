@@ -733,6 +733,8 @@ class TaskRun(
             lendPage(a, m, ph, web)
             val pr = assemblePrompt(a, priorTurns)
             val t = assembleTools(a, m, ph, mem, rec, pr, web)
+            // 工具会话(电脑直接调工具):只装配、不跑模型;工具面和手机上任务里的是同一套
+            if (com.wangzan101.mika.bridge.BridgeSessions.isBridge(mcpExternalId)) return runBridgeSession(t)
             val agent = assembleAgent(a, m, ph, taskGate, mem, rec, pr, web, t, priorTurns)
             assembleTakeover(a, agent, ph, t)
             val end = withContext(a.tally) { agent.run(pr.runSpec, inbox) }

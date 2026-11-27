@@ -235,6 +235,10 @@ class TaskService : Service() {
                         mcpExternalId = id)
                 }
             }
+            // 电脑直接调工具:起一个只装配、不跑模型的运行,工具面交给 BridgeSessions
+            ACTION_START_BRIDGE -> begin(intent.getStringExtra(EXTRA_GOAL).orEmpty(), intent.getStringExtra(EXTRA_CONVERSATION),
+                provenance = RunProvenance(RunOrigin.Mcp, Attendance.Unattended),
+                mcpExternalId = intent.getStringExtra(EXTRA_MCP_ID))
             ACTION_START_CHANNEL -> {
                 val peer = ChannelPeer(intent.getStringExtra(EXTRA_CHANNEL_ID).orEmpty(),
                     intent.getStringExtra(EXTRA_PEER_ID).orEmpty(), intent.getStringExtra(EXTRA_CONVERSATION).orEmpty())
@@ -367,6 +371,9 @@ class TaskService : Service() {
         internal const val ACTION_START_WORKFLOW = "com.wangzan101.mika.task.START_WORKFLOW"
         internal const val EXTRA_WORKFLOW_ATTEMPT = "workflow_attempt"
         const val ACTION_START_MCP = "com.wangzan101.mika.task.START_MCP"
+        const val ACTION_START_BRIDGE = "com.wangzan101.mika.task.START_BRIDGE"
+        /** 工具会话记在哪个对话里:固定一个,和用户自己的对话隔离。 */
+        internal const val BRIDGE_CONVERSATION = "mcp-bridge"
         const val ACTION_START_CHANNEL = "com.wangzan101.mika.task.START_CHANNEL"
         const val ACTION_CANCEL_MCP = "com.wangzan101.mika.task.CANCEL_MCP"
         const val ACTION_CANCEL = "com.wangzan101.mika.task.CANCEL"
@@ -536,6 +543,19 @@ class TaskService : Service() {
             context.startForegroundService(Intent(context, TaskService::class.java).setAction(ACTION_START_MCP)
                 .putExtra(EXTRA_GOAL, goal).putExtra(EXTRA_CONVERSATION, conversation)
                 .putExtra(EXTRA_MCP_ID, externalId).putExtra(EXTRA_ATTENDANCE, attendance.name))
+        }
+
+        /**
+         * 电脑要直接调工具([com.wangzan101.mika.bridge.BridgeSessions]):起一个只装配、不跑模型的运行。
+         * 它装配完会把工具面交出去并挂起,直到会话关闭或被取消。
+         */
+        fun startBridge(context: Context) {
+            if (FeatureFlags.get(context).quitRequested()) return
+            val id = com.wangzan101.mika.bridge.BridgeSessions.ID_PREFIX + java.util.UUID.randomUUID().toString()
+            context.startForegroundService(Intent(context, TaskService::class.java).setAction(ACTION_START_BRIDGE)
+                .putExtra(EXTRA_GOAL, "电脑直接操作这台手机")
+                .putExtra(EXTRA_CONVERSATION, BRIDGE_CONVERSATION)
+                .putExtra(EXTRA_MCP_ID, id))
         }
 
         fun cancelMcp(context: Context, externalId: String) {

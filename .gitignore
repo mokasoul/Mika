@@ -24,3 +24,6 @@ __pycache__/
 
 # plugin build output
 plugins/dist/
+
+.gradle-home/
+local.properties

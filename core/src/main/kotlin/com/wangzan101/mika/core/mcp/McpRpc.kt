@@ -25,7 +25,7 @@ import java.util.Base64
  * 进到这里的请求已经过了 [RemoteAccess](令牌、来源、限流、路径)。
  */
 class McpRpc(
-    private val tools: McpTaskTools,
+    private val tools: McpToolSet,
     private val serverVersion: String,
     /** 每个过了门口、能读出来的请求:对方说自己是哪个客户端(没说时为空)。 */
     private val onRequest: (remote: java.net.InetAddress, clientName: String?) -> Unit = { _, _ -> },

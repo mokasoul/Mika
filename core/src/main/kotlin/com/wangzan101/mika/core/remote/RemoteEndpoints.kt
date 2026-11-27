@@ -20,6 +20,8 @@ class RemoteEndpoints(
     private val records: RunExportSource? = null,
     private val calls: com.wangzan101.mika.core.calls.PhoneCallPort? = null,
     private val companion: RemoteCompanion? = null,
+    /** 工具级入口(MCP /tools):把本次运行装配好的工具面直接交给电脑;没接线时为 null,路径按不存在处理。 */
+    private val bridgeTools: (() -> com.wangzan101.mika.core.mcp.McpToolSet?)? = null,
     /** 用户暂停了 Mika:MCP 与 CLI 接口共用这一个标记([refuseRemote])。 */
     private val paused: com.wangzan101.mika.core.run.PauseFlag = com.wangzan101.mika.core.run.PauseFlag.Never,
 ) {
@@ -36,6 +38,12 @@ class RemoteEndpoints(
         val service = RemoteTaskService(scopedTasks, records = records?.scope(owner), paused = paused)
         val rpc = McpRpc(McpTaskTools(service, device.takeIf { deviceAccess }, calls.takeIf { deviceAccess }), serverVersion) { remote, name -> seen(remote, name) }
         if (req.path == McpRpc.PATH) return rpc.handle(req)
+        // 工具级入口:同一道认证门口,电脑直接调本次运行装配好的工具(手机模型不参与)
+        if (bridgeTools != null && req.path == BRIDGE_PATH) {
+            val set = bridgeTools.invoke()
+                ?: return RemoteTaskApi.error(503, "bridge_not_ready", "The tool session is not ready yet; retry in a moment.")
+            return McpRpc(set, serverVersion) { remote, name -> seen(remote, name) }.handle(req)
+        }
         if (req.path == RemoteTaskApi.ROOT || req.path.startsWith("${RemoteTaskApi.ROOT}/")) {
             seen(req.remote, req.header("x-mika-client")?.take(64))
             if (companionApi != null && CompanionApi.owns(req.path)) return companionApi.handle(req)
@@ -43,6 +51,11 @@ class RemoteEndpoints(
             return api.handle(req)
         }
         return RemoteTaskApi.error(404, "not_found", "No such endpoint")
+    }
+
+    companion object {
+        /** 工具级 MCP 入口的路径,和任务级 `/mcp` 并列。 */
+        const val BRIDGE_PATH = "/tools"
     }
 
     private fun seen(remote: InetAddress, name: String?) {
