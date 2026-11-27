@@ -30,8 +30,8 @@ android {
         applicationId = "com.wangzan101.mika"
         minSdk = 29
         targetSdk = 35
-        versionCode = 57
-        versionName = "0.1.56"
+        versionCode = 58
+        versionName = "0.1.57"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GIT_HASH", "\"$gitHash\"")
         // 关于页版本号后的 Beta 标记;出正式版时改成 false
@@ -41,7 +41,9 @@ android {
 
     // 沙箱程序只有 arm64 版本(jniLibs/arm64-v8a);APK 不限 ABI,别的设备照常安装、显示「此设备不支持沙箱」。
     // 沙箱程序要从 nativeLibraryDir 直接执行,安装时必须解到磁盘
-    packaging { jniLibs { useLegacyPackaging = true } }
+    packaging {
+        jniLibs { useLegacyPackaging = true }
+    }
 
     // 调试包与发布包共用这一个固定证书:先装的包和后到的更新包签名一致才能覆盖安装。
     signingConfigs {
@@ -68,7 +70,14 @@ android {
         }
     }
     // 自带的运行环境(assets/runtime/rootfs.tar.xz,tools/sandbox/build-runtime.py 生成)已是 xz,不再压一遍
-    androidResources { noCompress += "xz" }
+    // 壳模式瘦身:ignoreAssetsPattern 排除内置 Linux 沙箱的 rootfs(约 56 MB,占包体 47%)。
+    // 源码树里的 app/src/main/assets/runtime/rootfs.tar.xz 保持原样,
+    // 所以 BundledRuntimeTest(读的是源码树而非 APK)照常通过;
+    // App 侧 RuntimePreparer.ensure() 会捕获缺文件异常,降级范围仅限沙箱(终端)功能。
+    androidResources {
+        noCompress += "xz"
+        ignoreAssetsPattern = "!rootfs.tar.xz"
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
