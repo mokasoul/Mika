@@ -22,6 +22,13 @@ class RemoteEndpoints(
     private val companion: RemoteCompanion? = null,
     /** 工具级入口(MCP /bridge):把本次运行装配好的工具面直接交给电脑;没接线时为 null,路径按不存在处理。 */
     private val bridgeTools: (() -> com.wangzan101.mika.core.mcp.McpToolSet?)? = null,
+    /**
+     * 电脑说「我说完了」时的收尾回调([BRIDGE_SHUTDOWN_METHOD])。
+     *
+     * `/bridge` 是无状态 HTTP,手机看不见「会话结束」,只能靠空闲超时猜。给了这个回调,
+     * 电脑收尾时能明确说一句,手机立刻收工,不用干等。没接线就只靠超时兜底。
+     */
+    private val bridgeClose: (() -> Unit)? = null,
     /** 用户暂停了 Mika:MCP 与 CLI 接口共用这一个标记([refuseRemote])。 */
     private val paused: com.wangzan101.mika.core.run.PauseFlag = com.wangzan101.mika.core.run.PauseFlag.Never,
 ) {
@@ -40,6 +47,12 @@ class RemoteEndpoints(
         if (req.path == McpRpc.PATH) return rpc.handle(req)
         // 工具级入口:同一道认证门口,电脑直接调本次运行装配好的工具(手机模型不参与)
         if (bridgeTools != null && req.path == BRIDGE_PATH) {
+            // 电脑说「我说完了」。必须拦在 bridgeTools.invoke() 之前 —— 这句话不是工具调用,
+            // 为了处理它反而把会话又起一个就荒唐了。
+            if (bridgeClose != null && saysShutdown(req)) {
+                bridgeClose.invoke()
+                return HttpResponse.json(200, """{"jsonrpc":"2.0","result":{"ok":true}}""")
+            }
             val set = bridgeTools.invoke()
                 ?: return RemoteTaskApi.error(503, "bridge_not_ready", "The tool session is not ready yet; retry in a moment.")
             return McpRpc(set, serverVersion) { remote, name -> seen(remote, name) }.handle(req)
@@ -56,7 +69,16 @@ class RemoteEndpoints(
     companion object {
         /** 工具级 MCP 入口的路径,和任务级 `/mcp` 并列。 */
         const val BRIDGE_PATH = "/bridge"
+        /** 电脑在这一条 `/bridge` 请求里说「我说完了」。不是 MCP 方法,只在这一条路径上认。 */
+        const val BRIDGE_SHUTDOWN_METHOD = "bridge/shutdown"
     }
+
+    /** 这一条是不是电脑在说「我说完了」。解析失败就当不是 —— 不能因为一句话把请求打死。 */
+    private fun saysShutdown(req: HttpRequest): Boolean = runCatching {
+        val root = kotlinx.serialization.json.Json.parseToJsonElement(String(req.body, Charsets.UTF_8))
+        root is kotlinx.serialization.json.JsonObject &&
+            (root["method"] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content == BRIDGE_SHUTDOWN_METHOD
+    }.getOrDefault(false)
 
     private fun seen(remote: InetAddress, name: String?) {
         val now = clock()

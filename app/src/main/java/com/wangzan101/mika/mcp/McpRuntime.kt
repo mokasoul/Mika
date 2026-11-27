@@ -59,6 +59,7 @@ class McpRuntime(
     private val records: RunExportSource? = (tasks as? RemoteTaskHub)?.let { hub -> RemoteRunExport(hub) { RunStore(context) } }
     private val endpoints = RemoteEndpoints(tasks, BuildConfig.VERSION_NAME, device = device.access, history = history, records = records, calls = calls, companion = companion,
         bridgeTools = { com.wangzan101.mika.bridge.BridgeSessions.await(context) },
+        bridgeClose = { com.wangzan101.mika.bridge.BridgeSessions.close() },
         paused = com.wangzan101.mika.settings.MikaPause.get(context))
     private val relayAccess = RemoteAccess(token = { if (relaySettings.config.value.enabled) settings.token() else null })
     // 经网关来的请求要另开「允许经网关唤醒和解锁」才看得到屏幕能力;手机上的远程亮屏与解锁许可照样要开。
