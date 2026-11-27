@@ -35,4 +35,14 @@
     <string name="bridge_step_share_file">Exported %1$s</string>
     <string name="bridge_step_share_file_blank">Exported a file</string>
     <string name="bridge_step_other">Ran %1$s</string>
+    <string name="bridge_step_calendar_add">Added calendar event \"%1$s\"</string>
+    <string name="bridge_step_calendar_add_blank">Added a calendar event</string>
+    <string name="bridge_step_calendar_bulk">Bulk-added calendar events</string>
+    <string name="bridge_step_event">Recorded event \"%1$s\"</string>
+    <string name="bridge_step_event_blank">Recorded an event</string>
+    <string name="bridge_step_alarm_set">Set an alarm for %1$s</string>
+    <string name="bridge_step_alarm_set_blank">Set an alarm</string>
+    <string name="bridge_step_timer_set">Set a timer for %1$s</string>
+    <string name="bridge_step_timer_set_blank">Set a timer</string>
+    <string name="bridge_step_alarms_show">Checked the alarms</string>
 </resources>

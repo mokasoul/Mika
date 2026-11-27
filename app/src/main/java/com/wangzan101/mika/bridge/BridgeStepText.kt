@@ -50,6 +50,16 @@ internal fun bridgeStepText(name: String, args: JsonObject): String {
             "phone_share_text", "phone_share_audio", "phone_share_image", "phone_share_video" ->
                 tr(R.string.bridge_step_share)
             "phone_app_after_task" -> tr(R.string.bridge_step_after_task)
+            "phone_add_calendar_event" -> (arg("title") ?: arg("summary"))?.let { format(R.string.bridge_step_calendar_add, it) }
+                ?: tr(R.string.bridge_step_calendar_add_blank)
+            "phone_calendar_bulk_insert" -> tr(R.string.bridge_step_calendar_bulk)
+            "phone_event" -> arg("name")?.let { format(R.string.bridge_step_event, it) }
+                ?: tr(R.string.bridge_step_event_blank)
+            "phone_set_alarm" -> arg("time")?.let { format(R.string.bridge_step_alarm_set, it) }
+                ?: tr(R.string.bridge_step_alarm_set_blank)
+            "phone_set_timer" -> arg("duration")?.let { format(R.string.bridge_step_timer_set, it) }
+                ?: tr(R.string.bridge_step_timer_set_blank)
+            "phone_show_alarms" -> tr(R.string.bridge_step_alarms_show)
             "view_past_screens" -> tr(R.string.bridge_step_review)
             "read_file" -> arg("path")?.let { format(R.string.bridge_step_read_file, it.take(28)) }
                 ?: tr(R.string.bridge_step_read_file_blank)

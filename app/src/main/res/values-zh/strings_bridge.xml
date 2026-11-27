@@ -35,4 +35,14 @@
     <string name="bridge_step_share_file">导出文件 %1$s</string>
     <string name="bridge_step_share_file_blank">导出文件</string>
     <string name="bridge_step_other">执行 %1$s</string>
+    <string name="bridge_step_calendar_add">新建日程「%1$s」</string>
+    <string name="bridge_step_calendar_add_blank">新建日程</string>
+    <string name="bridge_step_calendar_bulk">批量新建日程</string>
+    <string name="bridge_step_event">记录事件「%1$s」</string>
+    <string name="bridge_step_event_blank">记录事件</string>
+    <string name="bridge_step_alarm_set">设闹钟 %1$s</string>
+    <string name="bridge_step_alarm_set_blank">设了一个闹钟</string>
+    <string name="bridge_step_timer_set">计时 %1$s</string>
+    <string name="bridge_step_timer_set_blank">设了计时器</string>
+    <string name="bridge_step_alarms_show">查看闹钟列表</string>
 </resources>
