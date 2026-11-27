@@ -74,7 +74,7 @@ internal suspend fun TaskRun.runBridgeSession(t: RunTools): TaskState = coroutin
     val idle = launch {
         while (isActive && !closed.isCompleted) {
             delay(5_000)
-            if (BridgeSessions.idleFor() > 60_000) {
+            if (BridgeSessions.idleFor() > BridgeSessions.IDLE_MS) {
                 BridgeSessions.close()
                 break
             }

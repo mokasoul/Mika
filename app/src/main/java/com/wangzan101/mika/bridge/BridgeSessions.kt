@@ -24,7 +24,10 @@ object BridgeSessions {
      * 电脑是"调一次工具、等结果、再调下一次",中间不会告诉手机"我说完了"。
      * 没有这道闸,`closed.await()` 会一直挂着,任务状态停在 Running,胶囊就永远显示在干活。
      */
-    private const val IDLE_MS = 60_000L
+    // 电脑调工具时不会说「我说完了」,只能靠空闲判据收尾。
+    // 30 秒:干完停手就回空闲;多步任务中间的思考停顿也可能触发,但会话重建是自动的
+    // (下次调用会重新起),代价只是胶囊闪一下。RunBridgeStage 直接引用这个常量。
+    internal const val IDLE_MS = 30_000L
 
     /** 步骤流最多记几条:胶囊那块地方只放得下几行。 */
     private const val MAX_STEPS = 8
