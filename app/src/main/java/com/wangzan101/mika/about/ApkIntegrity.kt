@@ -25,7 +25,8 @@ internal object ApkIntegrity {
 
     fun requireOfficialUrl(url: String) {
         val parsed = url.toHttpUrl()
-        require(parsed.isHttps && parsed.host == official.host && parsed.port == 443)
+        // 端口跟着下载源常量走,不硬编码 443 —— 自建分发点用非标准端口时无需再改这里。
+        require(parsed.isHttps && parsed.host == official.host && parsed.port == official.port)
         require(parsed.username.isEmpty() && parsed.password.isEmpty())
         require(parsed.encodedPath.startsWith(official.encodedPath))
         require(parsed.encodedPath.endsWith(".apk", ignoreCase = true))
