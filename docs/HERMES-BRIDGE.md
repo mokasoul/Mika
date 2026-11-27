@@ -35,8 +35,8 @@ Mika 原本的设计是:电脑把**整件事**交给手机(`mika_run_task`),手�
 ## 上游更新了怎么办
 
 ```bash
-scripts/upstream-sync.sh          # 只检查:拉上游、在临时 worktree 里试算我们那几个补丁还能不能干净应用
-scripts/upstream-sync.sh --apply  # 干净就真的 rebase
+tools/hermes-bridge/upstream-sync.sh          # 只检查:拉上游、在临时 worktree 里试算我们那几个补丁还能不能干净应用
+tools/hermes-bridge/upstream-sync.sh --apply  # 干净就真的 rebase
 ```
 
 冲突大概率只落在 `TaskService.kt` 的 `when (intent?.action)` 和 `RemoteEndpoints.handle()` 这两处,

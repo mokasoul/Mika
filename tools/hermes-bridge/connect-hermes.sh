@@ -2,8 +2,8 @@
 # 把 Mac 和手机上的 Mika 接起来，并用工具级入口（/tools）配好 Hermes 的 MCP server。
 #
 # 用法：
-#   scripts/connect-hermes.sh           # USB：打开电脑连接、端口转发、打印 token 和配置片段
-#   scripts/connect-hermes.sh --write   # 顺带把 token 写进 Hermes 的 config.yaml（会先备份）
+#   tools/hermes-bridge/connect-hermes.sh           # USB：打开电脑连接、端口转发、打印 token 和配置片段
+#   tools/hermes-bridge/connect-hermes.sh --write   # 顺带把 token 写进 Hermes 的 config.yaml（会先备份）
 #
 # 前置：手机插着 USB、adb devices 能看到设备、Mika 已装并打开过一次、
 #       Mika 里「连接电脑」已开启（USB 或局域网任一）。

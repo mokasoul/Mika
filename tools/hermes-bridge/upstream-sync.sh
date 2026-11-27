@@ -2,8 +2,8 @@
 # 把上游 wangzan101/Mika 的更新合进我们的 fork，并检查我们那几处改动还能不能干净应用。
 #
 # 用法：
-#   scripts/upstream-sync.sh            # 只检查，不动当前分支
-#   scripts/upstream-sync.sh --apply    # 检查通过就真的 rebase 到 upstream/main
+#   tools/hermes-bridge/upstream-sync.sh            # 只检查，不动当前分支
+#   tools/hermes-bridge/upstream-sync.sh --apply    # 检查通过就真的 rebase 到 upstream/main
 #
 # 我们的改动只集中在少数几处（见 docs/HERMES-BRIDGE.md 的改动清单），
 # 而且绝大多数是"新增文件 + 新增行"，所以正常情况 rebase 一遍就过。
@@ -64,7 +64,7 @@ if [ "$APPLY" = "1" ] && [ "$CLEAN" = "1" ]; then
   echo
   echo "正把 $BRANCH rebase 到 upstream/main ..."
   git rebase upstream/main
-  echo "✅ 完成。现在可以重新构建：scripts/build.sh"
+  echo "✅ 完成。现在可以重新构建：tools/hermes-bridge/build.sh"
 elif [ "$APPLY" = "1" ]; then
   echo "有冲突，没有执行 rebase（--apply 只在干净时生效）。"
   exit 1
