@@ -36,6 +36,10 @@ enum class RelayState { Off, Connecting, Online, Offline, Unauthorized, Incompat
  */
 class RelayClient(private val scope: CoroutineScope, private val handle: (HttpRequest) -> HttpResponse,
     private val http: OkHttpClient = RelayGateway.http().newBuilder().callTimeout(0, TimeUnit.SECONDS)
+        // 长连接必须把 readTimeout 关掉:OkHttp 默认 10 秒,而 pingInterval 是 25 秒,
+        // 空闲时读超时先到,连接就被判死、断开重连。调工具时数据一直在流所以看不出来,
+        // 光是配对不操作就必然 10 秒断一次。
+        .readTimeout(0, TimeUnit.SECONDS)
         .pingInterval(25, TimeUnit.SECONDS).build(),
     private val allowLoopbackHttp: Boolean = false,
     private val reconnectDelay: suspend (Long) -> Unit = { delay(it) },
