@@ -38,7 +38,8 @@ class MikaLinksTest {
     @Test
     fun issueUrlIsEncoded() {
         val url = MikaLinks.issueUrl(device)
-        assertTrue(url.startsWith("https://github.com/wangzan101/Mika/issues/new?title=&body="))
+        // 不写死仓库地址:REPO 换过(上游 wangzan101 → 本 fork mokasoul),断言跟着常量走
+        assertTrue(url.startsWith("${MikaLinks.NEW_ISSUE}?title=&body="))
         val query = url.substringAfter('?')
         assertFalse("no raw spaces or newlines", query.any { it == ' ' || it == '\n' || it == '+' })
         assertFalse("no raw non-ASCII", query.any { it.code > 127 })

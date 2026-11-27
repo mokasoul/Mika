@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 殼模式步驟流:把電腦的每次工具調用說成一句人話(見 bridge/BridgeStepText.kt)。 -->
+<resources>
+    <string name="bridge_step_tap">點擊「%1$s」</string>
+    <string name="bridge_step_tap_blank">點擊螢幕</string>
+    <string name="bridge_step_type">輸入「%1$s」</string>
+    <string name="bridge_step_type_blank">輸入文字</string>
+    <string name="bridge_step_clear">清空輸入框</string>
+    <string name="bridge_step_launch">打開 %1$s</string>
+    <string name="bridge_step_launch_blank">打開應用</string>
+    <string name="bridge_step_back">返回上一層</string>
+    <string name="bridge_step_key">按鍵 %1$s</string>
+    <string name="bridge_step_key_blank">按了一個鍵</string>
+    <string name="bridge_step_swipe">滑動螢幕</string>
+    <string name="bridge_step_scroll">捲動頁面</string>
+    <string name="bridge_step_find">尋找「%1$s」</string>
+    <string name="bridge_step_find_blank">在螢幕上尋找</string>
+    <string name="bridge_step_wait">等待「%1$s」出現</string>
+    <string name="bridge_step_wait_blank">等待介面變化</string>
+    <string name="bridge_step_read">讀取目前介面</string>
+    <string name="bridge_step_screenshot">截圖</string>
+    <string name="bridge_step_diagnose">檢查手機狀態</string>
+    <string name="bridge_step_dialog">查看彈窗</string>
+    <string name="bridge_step_list_apps">列出已安裝應用</string>
+    <string name="bridge_step_run">執行一批操作</string>
+    <string name="bridge_step_shell">執行命令:%1$s</string>
+    <string name="bridge_step_shell_blank">執行裝置命令</string>
+    <string name="bridge_step_share">從手機分享內容</string>
+    <string name="bridge_step_after_task">執行收尾動作</string>
+    <string name="bridge_step_review">回看先前的螢幕</string>
+    <string name="bridge_step_read_file">讀取檔案 %1$s</string>
+    <string name="bridge_step_read_file_blank">讀取檔案</string>
+    <string name="bridge_step_write_file">寫入檔案 %1$s</string>
+    <string name="bridge_step_write_file_blank">寫入檔案</string>
+    <string name="bridge_step_share_file">匯出檔案 %1$s</string>
+    <string name="bridge_step_share_file_blank">匯出檔案</string>
+    <string name="bridge_step_other">執行 %1$s</string>
+    <string name="bridge_step_calendar_add">新增行程「%1$s」</string>
+    <string name="bridge_step_calendar_add_blank">新增行程</string>
+    <string name="bridge_step_calendar_bulk">批量新增行程</string>
+    <string name="bridge_step_event">記錄事件「%1$s」</string>
+    <string name="bridge_step_event_blank">記錄事件</string>
+    <string name="bridge_step_alarm_set">設鬧鐘 %1$s</string>
+    <string name="bridge_step_alarm_set_blank">設了一個鬧鐘</string>
+    <string name="bridge_step_timer_set">計時 %1$s</string>
+    <string name="bridge_step_timer_set_blank">設了計時器</string>
+    <string name="bridge_step_alarms_show">查看鬧鐘列表</string>
+</resources>

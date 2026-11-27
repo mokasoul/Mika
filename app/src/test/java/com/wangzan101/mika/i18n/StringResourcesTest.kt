@@ -73,7 +73,10 @@ class StringResourcesTest {
     fun otherLanguagesMatchEnglish() {
         for (o in others) {
             val t = o.texts
-            assertEquals(o.folder, en.strings.keys - fixed, t.strings.keys)
+            // bridge_step_* 是壳模式步骤流文案,只有中英文(打包时 resourceConfigurations 也只留 zh/en),
+            // 别的语言不要求跟着有 —— 补了也不会进包。
+            fun Set<String>.withoutBridge() = filterNot { it.startsWith("bridge_step_") }.toSet()
+            assertEquals(o.folder, (en.strings.keys - fixed).withoutBridge(), t.strings.keys.withoutBridge())
             assertEquals(o.folder, en.plurals.keys, t.plurals.keys)
             for (name in t.strings.keys - setOf("date_month_day", "date_year_month_day")) {
                 assertEquals("${o.folder}/$name", args(en.strings.getValue(name)), args(t.strings.getValue(name)))

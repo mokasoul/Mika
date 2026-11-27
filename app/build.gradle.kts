@@ -30,13 +30,15 @@ android {
         applicationId = "com.wangzan101.mika"
         minSdk = 29
         targetSdk = 35
-        versionCode = 66
-        versionName = "0.1.65"
+        versionCode = 67
+        versionName = "0.1.66"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GIT_HASH", "\"$gitHash\"")
         // 关于页版本号后的 Beta 标记;出正式版时改成 false
         buildConfigField("boolean", "BETA", "true")
         buildConfigField("boolean", "ADB_LOGS", "false")
+        // 壳模式只有中英文界面;其余语言的字符串和图片都在 resources.arsc 里(6.6 MB)。
+        resourceConfigurations += listOf("zh", "en")
     }
 
     // 沙箱程序只有 arm64 版本(jniLibs/arm64-v8a);APK 不限 ABI,别的设备照常安装、显示「此设备不支持沙箱」。
@@ -90,7 +92,15 @@ android {
     buildTypes {
         // 调试包也挂固定证书,这样「手动装的第一个包」和之后从 GitHub 更新下来的包签名一致
         getByName("debug") { signingConfigs.findByName("bridge")?.let { signingConfig = it } }
-        getByName("release") { signingConfigs.findByName("bridge")?.let { signingConfig = it } }
+        getByName("release") {
+            signingConfigs.findByName("bridge")?.let { signingConfig = it }
+            // 壳模式瘦身:上游一直没开 R8,dex 52.9 MB 全是没收缩的裸代码。
+            // keep 规则见 app/proguard-rules.pro —— 只保序列化器与 Shizuku/protobuf,
+            // 代码里的反射全是系统类,不必 keep。
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
         // 真机验收时并排安装,保留发行版和用户数据;默认构建标识不变。
         if (providers.gradleProperty("devInstall").isPresent) getByName("debug") {
             applicationIdSuffix = ".dev"

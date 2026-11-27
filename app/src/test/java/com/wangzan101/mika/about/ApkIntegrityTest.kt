@@ -10,7 +10,8 @@ class ApkIntegrityTest {
     @get:Rule val temp = TemporaryFolder()
 
     @Test fun acceptsOfficialApk() {
-        ApkIntegrity.requireOfficialUrl("https://github.com/wangzan101/Mika/releases/download/v0.2.0/Mika.apk")
+        // 官方地址从 MikaLinks 派生,别写死上游 owner —— 本 fork 是 mokasoul
+        ApkIntegrity.requireOfficialUrl("${MikaLinks.REPO}/releases/download/v0.2.0/Mika.apk")
     }
 
     @Test fun rejectsUntrustedDownloads() {
@@ -30,7 +31,7 @@ class ApkIntegrityTest {
 
     /** 下载地址只信 GitHub 官方,或「镜像前缀 + 官方地址」这个精确形式;别的主机、路径和参数都不行。 */
     @Test fun acceptsOnlyOfficialOrConfiguredMirrorUrls() {
-        val official = "https://github.com/wangzan101/Mika/releases/download/v0.2.0/Mika.apk"
+        val official = "${MikaLinks.REPO}/releases/download/v0.2.0/Mika.apk"
         val mirrors = listOf(UpdateMirror("m", "GhFast", "https://ghfast.top/"))
         ApkIntegrity.requireTrustedDownloadUrl(official, official, mirrors)
         ApkIntegrity.requireTrustedDownloadUrl("https://ghfast.top/$official", official, mirrors)
