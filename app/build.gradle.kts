@@ -1,3 +1,6 @@
+import java.io.File
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -11,6 +14,14 @@ val gitHash: String = runCatching {
     providers.exec { commandLine("git", "rev-parse", "--short=7", "HEAD") }.standardOutput.asText.get().trim()
 }.getOrNull()?.takeIf { it.isNotEmpty() } ?: "dev"
 
+// 固定签名:更新包要能覆盖安装,每次构建必须是同一个证书。
+// 证书与口令放在 ~/.android/ 下,不进仓库;没有它时退回默认(调试包能装、发布包未签名)。
+val bridgeSigning = Properties().apply {
+    val f = File(System.getProperty("user.home"), ".android/mika-bridge.properties")
+    if (f.isFile) f.inputStream().use { load(it) }
+}
+val bridgeKeystore = File(System.getProperty("user.home"), ".android/mika-bridge.jks")
+
 android {
     namespace = "com.wangzan101.mika"
     compileSdk = 36
@@ -19,8 +30,8 @@ android {
         applicationId = "com.wangzan101.mika"
         minSdk = 29
         targetSdk = 35
-        versionCode = 53
-        versionName = "0.1.52"
+        versionCode = 54
+        versionName = "0.1.53"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GIT_HASH", "\"$gitHash\"")
         // 关于页版本号后的 Beta 标记;出正式版时改成 false
@@ -31,6 +42,18 @@ android {
     // 沙箱程序只有 arm64 版本(jniLibs/arm64-v8a);APK 不限 ABI,别的设备照常安装、显示「此设备不支持沙箱」。
     // 沙箱程序要从 nativeLibraryDir 直接执行,安装时必须解到磁盘
     packaging { jniLibs { useLegacyPackaging = true } }
+
+    // 调试包与发布包共用这一个固定证书:先装的包和后到的更新包签名一致才能覆盖安装。
+    signingConfigs {
+        if (bridgeSigning.isNotEmpty() && bridgeKeystore.isFile) {
+            create("bridge") {
+                storeFile = bridgeKeystore
+                storePassword = bridgeSigning.getProperty("storePassword")
+                keyAlias = bridgeSigning.getProperty("keyAlias")
+                keyPassword = bridgeSigning.getProperty("keyPassword")
+            }
+        }
+    }
 
     // 发布用的包(perf、release)按架构再出一份:除了全架构包,另出只带 arm64-v8a 原生库的小包。
     // 两个包代码、资源、版本号、签名都一样,只差 lib/ 下的其他架构;各自是完整 APK,不是一起安装的拆分包。
@@ -56,6 +79,9 @@ android {
     sourceSets.getByName("androidTest").assets.srcDir(rootProject.file("eval/tasks"))
 
     buildTypes {
+        // 调试包也挂固定证书,这样「手动装的第一个包」和之后从 GitHub 更新下来的包签名一致
+        getByName("debug") { signingConfigs.findByName("bridge")?.let { signingConfig = it } }
+        getByName("release") { signingConfigs.findByName("bridge")?.let { signingConfig = it } }
         // 真机验收时并排安装,保留发行版和用户数据;默认构建标识不变。
         if (providers.gradleProperty("devInstall").isPresent) getByName("debug") {
             applicationIdSuffix = ".dev"
