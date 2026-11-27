@@ -137,9 +137,9 @@ func (g *gateway) client(r *http.Request) string {
 }
 
 func relayPath(path string) bool {
-	// /tools 和 /mcp 并列：/mcp 是任务级（电脑交任务、手机上的模型决定怎么点），
-	// /tools 是工具级（电脑直接调原子工具，手机模型不参与）。两者都发到同一个 device 连接。
-	return path == "/mcp" || path == "/tools" || path == "/api/v1" || strings.HasPrefix(path, "/api/v1/")
+	// /bridge 和 /mcp 并列：/mcp 是任务级（电脑交任务、手机上的模型决定怎么点），
+	// /bridge 是工具级（电脑直接调原子工具，手机模型不参与）。两者都发到同一个 device 连接。
+	return path == "/mcp" || path == "/bridge" || path == "/api/v1" || strings.HasPrefix(path, "/api/v1/")
 }
 func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/device" {
@@ -374,8 +374,8 @@ var requestHeaders = map[string]bool{"authorization": true, "origin": true, "x-m
 var responseHeaders = map[string]bool{"content-type": true, "allow": true, "retry-after": true, "www-authenticate": true, "mcp-protocol-version": true}
 
 func proxyFailure(w http.ResponseWriter, r *http.Request, status int, code string) {
-	// MCP 的两条入口（任务级 /mcp、工具级 /tools）都按 JSON-RPC 的形状回错，别混进普通 JSON。
-	if r.URL.Path != "/mcp" && r.URL.Path != "/tools" {
+	// MCP 的两条入口（任务级 /mcp、工具级 /bridge）都按 JSON-RPC 的形状回错，别混进普通 JSON。
+	if r.URL.Path != "/mcp" && r.URL.Path != "/bridge" {
 		writeJSON(w, status, map[string]any{"error": map[string]string{"code": code, "message": code}})
 	} else {
 		failure(w, status, code)

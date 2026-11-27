@@ -24,7 +24,7 @@ Mika 原本的设计是:电脑把**整件事**交给手机(`mika_run_task`),手�
 |---|---|
 | `core/.../core/mcp/McpRpc.kt` | 构造参数类型 `McpTaskTools` → `McpToolSet`(1 行) |
 | `core/.../core/mcp/McpTaskTools.kt` | 声明实现 `McpToolSet` + 3 个 `override`(4 行) |
-| `core/.../core/remote/RemoteEndpoints.kt` | 新增 `bridgeTools` 参数、`/tools` 路由、`BRIDGE_PATH` 常量(约 10 行) |
+| `core/.../core/remote/RemoteEndpoints.kt` | 新增 `bridgeTools` 参数、`/bridge` 路由、`BRIDGE_PATH` 常量(约 10 行) |
 | `app/.../task/TaskRun.kt` | `execute()` 里装配完工具后一个 `if` 分支(2 行) |
 | `app/.../task/TaskService.kt` | `ACTION_START_BRIDGE` 分支、常量、`startBridge()`(约 20 行) |
 | `app/.../mcp/McpRuntime.kt` | 把 `BridgeSessions.await` 传给 `RemoteEndpoints`(1 行) |
@@ -68,16 +68,28 @@ tools/hermes-bridge/upstream-sync.sh --apply  # 干净就真的 rebase
 实现见 `app/.../task/RunBridgeStage.kt`:**`phone_` 前缀动态匹配** + 一份额外的文件类名单。
 按前缀而不是写死清单,上游以后新增手机工具会自动包含,不必每次同步上游都重新改代码发版。
 
-### 放出去的(静态统计 35)
+### 放出去的(运行时实测 36)
 
 | 类 | 数量 | 内容 |
 |---|---|---|
-| `phone_*` | 25 | 读屏 `phone_query`、结构化提取 `phone_extract`、多屏采集 `phone_collect`、滚动查找 `phone_find`、等界面事件 `phone_event`、查弹窗 `phone_dialog`、批量操作 `phone_run`、手势 `phone_gesture`、开 App `phone_launch_app`、列 App `phone_list_apps`、滚轮选择 `phone_set_wheel`、等待 `phone_wait`、短信验证码登录 `phone_sms_login`、分享 `phone_share_text`/`phone_share_image`/`phone_share_audio`/`phone_share_video`、日历闹钟 `phone_add_calendar_event`/`phone_calendar_bulk_insert`/`phone_set_alarm`/`phone_set_timer`/`phone_show_alarms`、打开链接 `phone_open_link`、设备 shell `phone_system_command`、任务后处理 `phone_app_after_task` |
-| 设备文件 | 9 | `list_device_files`、`list_folder_files`、`list_device_directory_hints`、`search_device_files`、`read_file`、`write_file`、`copy_device_file`、`view_image`、`share_file` |
+| `phone_*` | 32 | 手机侧的感知与操作全量:`phone_query` 读屏、`phone_observe` 观察、`phone_list_elements` 列元素、`phone_screenshot` 截图、`phone_extract` 结构化提取、`phone_collect` 多屏采集、`phone_find` 滚动查找、`phone_event` 等界面事件、`phone_dialog` 查弹窗、`phone_run` 批量操作、`phone_gesture` 手势、`phone_tap`/`phone_swipe`/`phone_scroll`/`phone_press_key`/`phone_type_text`/`phone_clear_text` 基础操作、`phone_back` 返回、`phone_wait` 等待、`phone_launch_app` 开 App、`phone_list_apps` 列 App、`phone_set_wheel` 滚轮选择、`phone_system_command` 设备 shell、`phone_diagnose` 诊断、`phone_share_text`/`phone_share_audio` 分享、日历闹钟 `phone_add_calendar_event`/`phone_calendar_bulk_insert`/`phone_set_alarm`/`phone_set_timer`/`phone_show_alarms`、`phone_app_after_task` 任务后处理 |
+| 沙箱文件 | 3 | `read_file`、`write_file`、`share_file` |
 | 回看屏幕 | 1 | `view_past_screens` —— 回看刚才的屏幕,电脑侧没有等价能力 |
 
+**设备文件类只兑现 3 个,这是上游的隐私策略,不是漏配。**
+`list_device_files`、`list_folder_files`、`list_device_directory_hints`、`search_device_files`、
+`copy_device_file`、`view_image` 在源码里都有定义,但只在「界面在前台且有人在看」时装配
+(`RunOrigin.Ui` + `Attendance.Present`);`Attendance.Unattended`、`RunOrigin.Mcp`、
+`RunOrigin.Child` 一律不给 —— `core/src/test/kotlin/.../DeviceFilesTest.kt:44-54`
+把这条钉死在测试里。bridge 会话正是无人应答,所以拿不到。
+**上游认为无人监督时不该翻手机文件,这个判断是对的,不去绕。**
+
+`read_file`/`write_file`/`share_file` 虽然属于 `SandboxGroup`,但只读写 App 的 workspace 目录,
+**不依赖**被裁掉的 Linux rootfs,所以可用(实测 write→read 往返成功)。
+
 > `phone_system_command` 走的是 **Shizuku 提供的设备 shell**(uid 2000),**不是**被裁掉的内置 rootfs,所以保留。
-> 实际数量以运行时返回的工具清单为准(源码静态统计出 82 个定义,少数在动态构造里,正则数不到)。
+> 源码里 `ToolDef("…")` 静态统计 89 个定义;运行时按 `phone_` 前缀 + 额外名单装配出 36 个。
+> 数量以运行时 tools/list 实测为准,不以静态统计为准。
 
 ### 不放的:逐个核对过 label 与实现
 
@@ -136,18 +148,18 @@ androidResources {
    cat /sdcard/Android/data/com.wangzan101.mika/files/mcp-usb.json   # 拿 token
    ```
 
-3. Hermes 配置里加一个 MCP server,URL 用**工具级**入口 `/tools`(不是任务级的 `/mcp`):
+3. Hermes 配置里加一个 MCP server,URL 用**工具级**入口 `/bridge`(不是任务级的 `/mcp`):
 
    ```yaml
    mcp_servers:
      mika-bridge:
        type: http
-       url: http://127.0.0.1:8765/tools
+       url: http://127.0.0.1:8765/bridge
        headers:
          Authorization: Bearer <token>
    ```
 
-   `/mcp` 仍然是「把整件事交给手机」,`/tools` 才是「电脑直接调工具」。两者可同时开着。
+   `/mcp` 仍然是「把整件事交给手机」,`/bridge` 才是「电脑直接调工具」。两者可同时开着。
 
 ## 已知限制(第一版)
 
