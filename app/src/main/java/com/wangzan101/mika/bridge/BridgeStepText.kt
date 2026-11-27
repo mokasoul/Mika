@@ -21,8 +21,13 @@ internal fun bridgeStepText(name: String, args: JsonObject): String {
     fun arg(key: String): String? =
         runCatching { args[key]?.jsonPrimitive?.contentOrNull }.getOrNull()?.trim()?.takeIf { it.isNotEmpty() }
 
-    /** 点击类:优先用可见文字,其次用调用方给的 target。 */
-    fun target(): String? = arg("element") ?: arg("target") ?: arg("name")
+    /** 点击类:人话优先(text 参数),其次才是调用方给的 target。 */
+    fun target(): String? {
+        arg("text")?.let { return it }
+        val e = arg("element") ?: arg("target") ?: arg("name")
+        // @e12 是元素引用,不是给人看的名字,别直接把 ref 甩到用户脸上
+        return e?.takeIf { !it.startsWith("@") }
+    }
 
     return safe {
         when (name) {

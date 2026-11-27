@@ -4,6 +4,10 @@ import com.wangzan101.mika.bridge.BridgeSessions
 import com.wangzan101.mika.core.agent.TaskState
 import com.wangzan101.mika.core.mcp.BridgeToolSet
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 /**
  * 壳模式放出去的工具面：只放「只能在手机上做、Mac 侧没有等价能力」的那些。
@@ -51,7 +55,7 @@ internal fun bridgeAllow(all: List<String>): Set<String> = all
  *
  * 危险动作(付款、确认、交给人、改 Mika 自己)没有人应答,由 [BridgeToolSet] 里的闸门拦下不执行。
  */
-internal suspend fun TaskRun.runBridgeSession(t: RunTools): TaskState {
+internal suspend fun TaskRun.runBridgeSession(t: RunTools): TaskState = coroutineScope {
     val allow = bridgeAllow(t.tools.definitions().map { it.name })
     val set = BridgeToolSet(
         t.tools, allow,
@@ -59,15 +63,28 @@ internal suspend fun TaskRun.runBridgeSession(t: RunTools): TaskState {
         // 这里把电脑的每次调用翻成一句人话写进状态,步骤流才看得到电脑在点哪。
         onStep = { step, name, args ->
             val said = com.wangzan101.mika.bridge.bridgeStepText(name, args)
+            BridgeSessions.record(said)
             runState.setState(TaskState.Running(step, said, narration = said))
         },
     )
     val closed = CompletableDeferred<Unit>()
     BridgeSessions.install(set, closed)
-    return try {
+    // 电脑调一次工具、等结果、再调下一次,不会说「我说完了」。没有这道闸,
+    // closed.await() 会一直挂着,任务状态停在 Running,胶囊永远显示在干活。
+    val idle = launch {
+        while (isActive && !closed.isCompleted) {
+            delay(5_000)
+            if (BridgeSessions.idleFor() > 60_000) {
+                BridgeSessions.close()
+                break
+            }
+        }
+    }
+    return@coroutineScope try {
         closed.await()
         TaskState.Succeeded(answer = "工具会话已关闭", verified = false, reviewed = false)
     } finally {
+        idle.cancel()
         BridgeSessions.clear(set)
     }
 }

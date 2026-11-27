@@ -18,11 +18,24 @@ object BridgeSessions {
     /** 电脑第一次请求时起的那个运行的标记;`mcpExternalId` 带这个前缀的就是工具会话。 */
     const val ID_PREFIX = "bridge:"
 
+    /**
+     * 超过这么久没有电脑调用,就当这轮活儿干完了。
+     *
+     * 电脑是"调一次工具、等结果、再调下一次",中间不会告诉手机"我说完了"。
+     * 没有这道闸,`closed.await()` 会一直挂着,任务状态停在 Running,胶囊就永远显示在干活。
+     */
+    private const val IDLE_MS = 60_000L
+
+    /** 步骤流最多记几条:胶囊那块地方只放得下几行。 */
+    private const val MAX_STEPS = 8
+
     private val lock = Any()
     @Volatile private var set: BridgeToolSet? = null
     @Volatile private var closed: CompletableDeferred<Unit>? = null
     @Volatile private var starting = false
     @Volatile private var lastError: String? = null
+    @Volatile private var lastActive = 0L
+    private val steps = mutableListOf<String>()
 
     /** 手机上这个运行的标记要不要当作工具会话。 */
     fun isBridge(externalId: String?): Boolean = externalId?.startsWith(ID_PREFIX) == true
@@ -34,8 +47,32 @@ object BridgeSessions {
             this.closed = closed
             starting = false
             lastError = null
+            steps.clear()
+            lastActive = System.currentTimeMillis()
         }
     }
+
+    /**
+     * 记一步人话,给胶囊的步骤流用。
+     *
+     * 壳模式不跑模型,没有 [Exchange] 那样的历史步骤,`steps(ex, line)` 只能拿到当前一句 ——
+     * 于是每来一次新调用上一条就被覆盖,用户永远只看见最后一句。这里自己攒一份。
+     */
+    fun record(said: String) {
+        synchronized(lock) {
+            lastActive = System.currentTimeMillis()
+            if (said.isNotBlank()) {
+                steps.add(said)
+                while (steps.size > MAX_STEPS) steps.removeAt(0)
+            }
+        }
+    }
+
+    /** 距离上一次电脑调用过了多久(给空闲闸用)。 */
+    fun idleFor(): Long = System.currentTimeMillis() - lastActive
+
+    /** 这一轮已经做过的步骤;没有会话时为空。 */
+    fun stepList(): List<String> = synchronized(lock) { steps.toList() }
 
     /** 装配失败(没助手、没无障碍、手机正忙等):记下原因,请求方据此报错,不用干等到超时。 */
     fun fail(reason: String) {
@@ -52,6 +89,8 @@ object BridgeSessions {
                 set = null
                 closed = null
                 starting = false
+                steps.clear()
+                lastActive = 0L
             }
         }
     }

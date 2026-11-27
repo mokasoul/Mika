@@ -187,7 +187,16 @@ object CapsuleCards {
             is TaskState.Succeeded -> CardContent.Result(CapsuleKind.Done)
             is TaskState.Failed -> CardContent.Result(CapsuleKind.Failed)
             TaskState.Cancelled -> CardContent.Result(CapsuleKind.Cancelled)
-            else -> CardContent.Working(steps(ex, r.line))
+            // 壳模式没有 Exchange,steps(ex, line) 只能拿到当前一句,上一条会被覆盖。
+            // 电脑这一轮做过的步骤由 BridgeSessions 自己攒着,这里取那份。
+            else -> CardContent.Working(
+                if (r.run.bridge) {
+                    com.wangzan101.mika.bridge.BridgeSessions.stepList()
+                        .ifEmpty { listOfNotNull(r.line.takeIf(String::isNotBlank)) }
+                } else {
+                    steps(ex, r.line)
+                },
+            )
         }
     }
 
