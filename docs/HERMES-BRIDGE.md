@@ -94,3 +94,32 @@ setOf("phone_query", "phone_find", "phone_launch_app", "phone_gesture")
   纯壳用途也建议先随便配一个模型,避免这条路径走不通。
 - **没有自动关闭**:会话会一直挂着直到被取消。后续可以加空闲超时。
 - 虚拟屏操作:和你自己那套青鸟一样,不占主屏,但也意味着盯着手机看不到它在点哪。
+
+## 在线更新(本 fork 自己发版)
+
+发到 fork 的 release,手机 App 里「检查更新」就会拉它。三件事缺一不可:
+
+| 环节 | 位置 | 为什么 |
+|---|---|---|
+| 固定签名 | `app/build.gradle.kts` 的 `signingConfigs.bridge` | 证书变了,更新包就装不上去,只能卸载重装(会丢数据和授权) |
+| 更新源 | `about/MikaLinks.kt` 的 `REPO` / `LATEST_RELEASE_API` | 硬编码官方仓库的话永远查不到我们的版本 |
+| 附件命名 | `tools/hermes-bridge/release.sh` | `Releases.apkPreference()` 按 `-arm64.apk` 后缀挑包,`app-arm64-v8a-release.apk` 直接发上去匹配不到 |
+
+证书与口令存在 `~/.android/mika-bridge.jks` 和 `~/.android/mika-bridge.properties`(600 权限),
+**不进仓库**。当前证书 `CN=Mika Bridge`,SHA-256 `60fa7642…a7dd`。
+
+发版:
+
+```bash
+tools/hermes-bridge/release.sh --publish   # 构建 + 验签 + 改名为 mika-arm64/mika-universal + gh release create
+```
+
+版本号要同时在 `app/build.gradle.kts` 里加:只改 `versionName` 不改 `versionCode`,
+Android 仍按 versionCode 判新旧,装不上。
+
+下载侧的两道校验(都会被我们的 fork 满足,但要记住它们的存在):
+
+- `ApkIntegrity.requireOfficialUrl()`:HTTPS + host 必须是 `github.com` +
+  路径以 `${MikaLinks.RELEASES}/download/` 开头。因为 `official` 是从常量派生的,改常量即自动放行。
+- 装之前还验包名、版本号、签名证书,任何一项不符都会报 `ApkRejected`。
+

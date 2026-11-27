@@ -28,7 +28,7 @@ SDK=${ANDROID_HOME:-/opt/homebrew/share/android-commandlinetools}
 export JAVA_HOME=${JAVA_HOME:-/opt/homebrew/opt/openjdk@21}
 export GRADLE_USER_HOME=$PWD/.gradle-home
 
-echo "版本 $VERSION（tag $TAG）"
+echo "版本 ${VERSION}（tag ${TAG}）"
 ./gradlew :app:assembleRelease --console=plain
 
 A64=app/build/outputs/apk/release/app-arm64-v8a-release.apk
@@ -53,15 +53,15 @@ ls -lh "$DIST"/*.apk
 
 if [ "$PUBLISH" = "1" ]; then
   if gh release view "$TAG" --repo mokasoul/Mika >/dev/null 2>&1; then
-    echo "❌ $TAG 已存在。先在版本号上 +1（versionCode 与 versionName 同步改）再发。"
+    echo "❌ ${TAG} 已存在。先在版本号上 +1（versionCode 与 versionName 同步改）再发。"
     exit 1
   fi
   NOTES=${NOTES:-"壳模式构建：电脑可直接调用手机工具（/tools），手机模型不参与。"}
   gh release create "$TAG" "$DIST/mika-arm64.apk" "$DIST/mika-universal.apk" \
     --repo mokasoul/Mika --title "$TAG" --notes "$NOTES"
   echo
-  echo "已发布：https://github.com/mokasoul/Mika/releases/tag/$TAG"
-  echo "手机上打开 Mika › 关于 › 检查更新 应能看到 $VERSION"
+  echo "已发布：https://github.com/mokasoul/Mika/releases/tag/${TAG}"
+  echo "手机上打开 Mika › 关于 › 检查更新 应能看到 ${VERSION}"
 else
   echo
   echo "没发。要发就加 --publish。"
