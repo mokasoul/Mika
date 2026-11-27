@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"net/netip"
@@ -136,7 +137,9 @@ func (g *gateway) client(r *http.Request) string {
 }
 
 func relayPath(path string) bool {
-	return path == "/mcp" || path == "/api/v1" || strings.HasPrefix(path, "/api/v1/")
+	// /tools 和 /mcp 并列：/mcp 是任务级（电脑交任务、手机上的模型决定怎么点），
+	// /tools 是工具级（电脑直接调原子工具，手机模型不参与）。两者都发到同一个 device 连接。
+	return path == "/mcp" || path == "/tools" || path == "/api/v1" || strings.HasPrefix(path, "/api/v1/")
 }
 func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/device" {
@@ -282,14 +285,17 @@ func (g *gateway) deviceEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{Subprotocols: []string{subprotocol}})
 	if err != nil {
+		log.Printf("device: accept failed: %v", err)
 		return
 	}
 	defer c.CloseNow()
+	log.Printf("device: ws accepted from %s", r.RemoteAddr)
 	c.SetReadLimit(2 * maxBody)
 	l := &deviceLink{conn: c, pending: map[string]chan frame{}, done: make(chan struct{})}
 	g.mu.Lock()
 	if !matches(bearer(r), g.store.view().DeviceHash) {
 		g.mu.Unlock()
+		log.Printf("device: token mismatch after accept, closing")
 		return
 	}
 	previous := g.device
@@ -331,6 +337,7 @@ func (g *gateway) deviceEndpoint(w http.ResponseWriter, r *http.Request) {
 	for {
 		kind, b, err := c.Read(ctx)
 		if err != nil {
+			log.Printf("device: read loop ended: %v", err)
 			return
 		}
 		var f frame
@@ -367,7 +374,8 @@ var requestHeaders = map[string]bool{"authorization": true, "origin": true, "x-m
 var responseHeaders = map[string]bool{"content-type": true, "allow": true, "retry-after": true, "www-authenticate": true, "mcp-protocol-version": true}
 
 func proxyFailure(w http.ResponseWriter, r *http.Request, status int, code string) {
-	if r.URL.Path != "/mcp" {
+	// MCP 的两条入口（任务级 /mcp、工具级 /tools）都按 JSON-RPC 的形状回错，别混进普通 JSON。
+	if r.URL.Path != "/mcp" && r.URL.Path != "/tools" {
 		writeJSON(w, status, map[string]any{"error": map[string]string{"code": code, "message": code}})
 	} else {
 		failure(w, status, code)
@@ -426,6 +434,7 @@ func (g *gateway) proxy(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), g.requestTimeout)
 	defer cancel()
 	if err = l.send(ctx, frame{Type: "request", ID: id, Method: r.Method, Path: r.URL.Path, Query: r.URL.RawQuery, Headers: headers, Body: body, Client: g.client(r)}); err != nil {
+		log.Printf("proxy: send to device failed (path=%s): %v", r.URL.Path, err)
 		l.close()
 		reject(502, "delivery_unknown")
 		return

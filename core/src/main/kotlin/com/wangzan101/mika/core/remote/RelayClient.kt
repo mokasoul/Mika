@@ -173,7 +173,7 @@ class RelayClient(private val scope: CoroutineScope, private val handle: (HttpRe
         private val RESPONSE_HEADERS = setOf("content-type", "allow", "retry-after", "www-authenticate", "mcp-protocol-version")
         /** 网关看到的调用方:IPv4 地址或 IPv6 的 /64 前缀;网关没给时为空,这些调用方共用一份冷却。 */
         private val CLIENT = Regex("[0-9A-Fa-f.:/]{0,64}")
-        private fun relayPath(path: String) = path == "/mcp" || path == "/api/v1" || path.startsWith("/api/v1/")
+        private fun relayPath(path: String) = path == "/mcp" || path == "/tools" || path == "/api/v1" || path.startsWith("/api/v1/")
         private fun validHeaders(headers: Map<String, String>): Boolean = headers.size <= 16 &&
             headers.entries.sumOf { it.key.length + it.value.length } <= 8192 &&
             headers.all { (k, v) -> k in REQUEST_HEADERS && '\r' !in v && '\n' !in v }
