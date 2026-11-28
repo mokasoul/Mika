@@ -13,8 +13,10 @@ import com.wangzan101.mika.core.tool.ToolDispatcher
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 
@@ -67,9 +69,32 @@ class BridgeToolSet(
                 put("name", t.name)
                 put("description", t.description)
                 // 源里的 schema 是 JSON 文本;解析不了就不给 schema,让对面按无参调用并收到参数错误
-                runCatching { json.parseToJsonElement(t.parametersJsonSchema) }.getOrNull()?.let { put("inputSchema", it) }
+                val schema = runCatching { json.parseToJsonElement(t.parametersJsonSchema) }.getOrNull()
+                if (t.name in BridgeBrief.APPLIES_TO && schema is JsonObject) {
+                    put("inputSchema", withBriefFormat(schema))
+                } else {
+                    schema?.let { put("inputSchema", it) }
+                }
                 putJsonObject("annotations") { put("readOnlyHint", false) }
             })
+        }
+    }
+
+    /**
+     * 给读屏类工具补一个 `format` 参数。
+     *
+     * 源 schema 是通用定义,不该为了电脑侧的排版需求去改手机端工具签名 —— 所以只在桥这一层
+     * 追加,传 `format=brief` 时由 [BridgeBrief] 改排版,不传就完全是原来的回执。
+     */
+    private fun withBriefFormat(schema: JsonObject): JsonObject = buildJsonObject {
+        schema.forEach { (k, v) -> if (k != "properties") put(k, v) }
+        putJsonObject("properties") {
+            (schema["properties"] as? JsonObject)?.forEach { (k, v) -> put(k, v) }
+            putJsonObject("format") {
+                put("type", "string")
+                put("enum", buildJsonArray { add(JsonPrimitive("brief")) })
+                put("description", "brief: 中文摘要,不给坐标,约为原 JSON 的 1/5。不传则返回原 JSON。")
+            }
         }
     }
 
@@ -88,6 +113,10 @@ class BridgeToolSet(
         }
         val content = outcome.execution().content
         events.event(RunEvent.ToolResult(clock(), step, name, content.toString(), null, null, 0, callId = callId))
+        // format=brief:只改排版,不改读到的内容;不是读屏类工具就原样返回。
+        if ((args["format"] as? JsonPrimitive)?.contentOrNull == "brief") {
+            return BridgeBrief.render(name, content)
+        }
         return content
     }
 

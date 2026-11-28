@@ -46,6 +46,11 @@ object ScreenJson {
                 if (e.bounds.size == 4) put("size", JsonArray(listOf(JsonPrimitive(e.bounds[2] - e.bounds[0]), JsonPrimitive(e.bounds[3] - e.bounds[1]))))
                 e.resourceId?.let { put("resourceId", it) }
                 if (e.hint) put("hint", true)
+                // 状态与可滑动:模型判断「开关开没开」「这屏能不能滑」全靠它,原本只留在 UiElement 里没往外吐。
+                // 只在非空时输出,不改变无状态元素的体量。
+                if (e.states.isNotEmpty()) put("state", e.states.sorted().joinToString(","))
+                if (e.scrollable) put("scrollable", true)
+                if (!e.clickable && e.editable) put("editable", true)
             })
         }
         return arr to (all.size - arr.size).coerceAtLeast(0)
