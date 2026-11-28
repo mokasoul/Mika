@@ -103,20 +103,23 @@ class BridgeToolSet(
     override suspend fun call(name: String, args: JsonObject): JsonObject {
         if (name !in names) return fail("unknown_tool")
         step++
-        onStep(step, name, args)
+        // format 是桥层自己的排版开关,手机上的工具不认识它 —— 必须剥掉再交给 executor,
+        // 否则参数校验会以 invalid_arguments 打回(实测:format: unknown argument for phone_observe)。
+        // schema 里那个 format 是给对面看的,不是给手机看的。
+        val wantsBrief = (args["format"] as? JsonPrimitive)?.contentOrNull == "brief"
+        val forwarded = if ("format" in args) JsonObject(args - "format") else args
+        onStep(step, name, forwarded)
         val callId = "bridge_$step"
         events.event(RunEvent.State(clock(), "bridge_tool_call", "$callId $name"))
         val outcome = try {
-            executor.run(Part.ToolCall(callId, name, args.toString()), Origin.McpTool(step))
+            executor.run(Part.ToolCall(callId, name, forwarded.toString()), Origin.McpTool(step))
         } catch (e: Exception) {
             return fail("tool_failed", e.message ?: e::class.simpleName)
         }
         val content = outcome.execution().content
         events.event(RunEvent.ToolResult(clock(), step, name, content.toString(), null, null, 0, callId = callId))
         // format=brief:只改排版,不改读到的内容;不是读屏类工具就原样返回。
-        if ((args["format"] as? JsonPrimitive)?.contentOrNull == "brief") {
-            return BridgeBrief.render(name, content)
-        }
+        if (wantsBrief) return BridgeBrief.render(name, content)
         return content
     }
 
